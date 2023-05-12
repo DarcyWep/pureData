@@ -1,4 +1,4 @@
-module pureData
+module github.com/DarcyWep/pureData
 
 go 1.19
 

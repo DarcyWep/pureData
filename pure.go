@@ -1,9 +1,9 @@
 package pureData
 
 import (
+	"github.com/DarcyWep/pureData/transaction"
 	"github.com/syndtr/goleveldb/leveldb"
 	"math/big"
-	"pureData/transaction"
 	"strings"
 )
 
