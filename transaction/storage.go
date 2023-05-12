@@ -5,45 +5,42 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type storageTransition struct {
-	label uint8 // 0: state, 1: storage
+type StorageTransition struct {
+	Label uint8 // 0: state, 1: storage
 
-	contractAddress common.Address
-	slot            common.Hash // 智能合约的存储槽
-	preValue        common.Hash
-	newValue        *common.Hash // newValue = nil 则是 SLOAD, 否则为 SSTORE
+	Contract common.Address
+	Slot     common.Hash // 智能合约的存储槽
+	PreValue common.Hash
+	NewValue *common.Hash // newValue = nil 则是 SLOAD, 否则为 SSTORE
 }
 
-func newStorageTransition(contractAddress common.Address, slot common.Hash) *storageTransition {
-	return &storageTransition{
-		label: 1,
+func newStorageTransition(contract common.Address, slot common.Hash, preValue, newValue *common.Hash) *StorageTransition {
+	st := &StorageTransition{
+		Label: 1,
 
-		contractAddress: contractAddress,
-		slot:            slot,
-		newValue:        new(common.Hash),
+		Contract: contract,
+		Slot:     slot,
+		PreValue: *preValue,
 	}
-}
-
-func (s *storageTransition) addStorageTransition(preValue, newValue *common.Hash) {
-	s.preValue = *preValue
-	if newValue == nil {
-		s.newValue = nil
+	st.NewValue = new(common.Hash)
+	if newValue != nil {
+		st.NewValue.SetBytes(newValue.Bytes())
 	} else {
-		*s.newValue = *newValue
+		st.NewValue = nil
 	}
+	return st
 }
 
-func (s *storageTransition) GetLabel() uint8 {
-	return s.label
+func (s *StorageTransition) GetLabel() uint8 {
+	return s.Label
 }
 
-func (s *storageTransition) String() string {
+func (s *StorageTransition) String() string {
 	var str string = ""
-	if s.newValue == nil {
-		str = fmt.Sprintf("%d,%v,%v,%v,", s.label, s.contractAddress.Hex(), s.slot.Hex(), s.preValue.Hex())
+	if s.NewValue == nil {
+		str = fmt.Sprintf("%d,%v,%v,%v,", s.Label, s.Contract.Hex(), s.Slot.Hex(), s.PreValue.Hex())
 	} else {
-		str = fmt.Sprintf("%d,%v,%v,%v,%v", s.label, s.contractAddress.Hex(), s.slot.Hex(), s.preValue.Hex(), s.newValue.Hex())
+		str = fmt.Sprintf("%d,%v,%v,%v,%v", s.Label, s.Contract.Hex(), s.Slot.Hex(), s.PreValue.Hex(), s.NewValue.Hex())
 	}
-	//fmt.Println(str)
 	return str
 }
