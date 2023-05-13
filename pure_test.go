@@ -25,8 +25,8 @@ func openLeveldb(path string) (*leveldb.DB, error) {
 }
 
 func Test(t *testing.T) {
-	//db, err := openLeveldb(nativeDbPath) // get native transaction or merge transaction
-	db, err := openLeveldb(mergeDbPath) // get native transaction or merge transaction
+	db, err := openLeveldb(nativeDbPath) // get native transaction or merge transaction
+	//db, err := openLeveldb(mergeDbPath) // get native transaction or merge transaction
 	defer db.Close()
 	if err != nil {
 		fmt.Println("open leveldb error,", err)

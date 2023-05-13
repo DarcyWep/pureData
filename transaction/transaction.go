@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var big0 = new(big.Int).SetInt64(0)
@@ -16,26 +17,27 @@ type Transfer interface { // 转账
 }
 
 type Transaction struct {
-	BlockNumber *big.Int
-	Hash        *common.Hash
-	From        *common.Address
-	To          *common.Address
-	Index       *big.Int
-	Value       *big.Int
+	BlockNumber   *big.Int
+	Hash          *common.Hash
+	From          *common.Address
+	To            *common.Address
+	Index         *big.Int
+	Value         *big.Int
+	ExecutionTime time.Duration
 
 	Transfers []Transfer
 }
 
-func newTransaction(number *big.Int, hash *common.Hash, from, to *common.Address, index, value *big.Int) *Transaction {
+func newTransaction(number *big.Int, hash *common.Hash, from, to *common.Address, index, value, t *big.Int) *Transaction {
 	tx := &Transaction{}
 	tx.BlockNumber = new(big.Int).Set(number)
 	if hash.Hex() != (common.Hash{}).Hex() { // 非最后的区块奖励部分
-		tx.initTransaction(hash, from, to, index, value)
+		tx.initTransaction(hash, from, to, index, value, t)
 	}
 	return tx
 }
 
-func (tx *Transaction) initTransaction(hash *common.Hash, from, to *common.Address, index, value *big.Int) {
+func (tx *Transaction) initTransaction(hash *common.Hash, from, to *common.Address, index, value, t *big.Int) {
 	tx.Hash = new(common.Hash)
 	tx.From = new(common.Address)
 	tx.To = new(common.Address)
@@ -49,6 +51,7 @@ func (tx *Transaction) initTransaction(hash *common.Hash, from, to *common.Addre
 	}
 	tx.Index = new(big.Int).Set(index)
 	tx.Value = new(big.Int).Set(value)
+	tx.ExecutionTime = time.Duration(t.Int64())
 	tx.Transfers = make([]Transfer, 0)
 }
 
@@ -63,6 +66,7 @@ func UnmarshalTransaction(txStr string) *Transaction {
 		to     = new(common.Address)
 		index  *big.Int
 		value  *big.Int
+		t      *big.Int
 	)
 
 	//for _, infoStr := range infoStrs {
@@ -88,7 +92,10 @@ func UnmarshalTransaction(txStr string) *Transaction {
 
 	transferStrs := strings.Split(infoStrs[6], " ")
 
-	tx := newTransaction(number, hash, from, to, index, value)
+	tmp.SetString(infoStrs[7], 10)
+	t = new(big.Int).Set(tmp)
+
+	tx := newTransaction(number, hash, from, to, index, value, t)
 	for _, transferStr := range transferStrs {
 		if transferStr[0] == '0' {
 			tx.Transfers = append(tx.Transfers, Transfer(unmarshalStateTransition(transferStr)))
@@ -173,7 +180,7 @@ func (tx Transaction) String() string {
 	}
 
 	if tx.Hash == nil {
-		return fmt.Sprintf("||||||%v", trs[:len(trs)-1])
+		return fmt.Sprintf("||||||%v|", trs[:len(trs)-1])
 	}
 
 	if tx.From != nil {
@@ -192,6 +199,7 @@ func (tx Transaction) String() string {
 	if trs != "" {
 		trs = trs[0 : len(trs)-1]
 	}
+	t := new(big.Int).SetInt64(int64(tx.ExecutionTime))
 	//fmt.Println(number.String(), tx.Hash.Hex(), from, to, index, value)
-	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", tx.BlockNumber.String(), tx.Hash.Hex(), from, to, index, value, trs)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v", tx.BlockNumber.String(), tx.Hash.Hex(), from, to, index, value, trs, t.String())
 }
