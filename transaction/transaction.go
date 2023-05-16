@@ -23,21 +23,24 @@ type Transaction struct {
 	To            *common.Address
 	Index         *big.Int
 	Value         *big.Int
+	Contract      bool
+	Input         []byte
+	CallSum       int
 	ExecutionTime time.Duration
 
 	Transfers []Transfer
 }
 
-func newTransaction(number *big.Int, hash *common.Hash, from, to *common.Address, index, value, t *big.Int) *Transaction {
+func newTransaction(number *big.Int, hash *common.Hash, from, to *common.Address, index, value, t *big.Int, contract bool, input []byte, callSum int) *Transaction {
 	tx := &Transaction{}
 	tx.BlockNumber = new(big.Int).Set(number)
 	if hash.Hex() != (common.Hash{}).Hex() { // 非最后的区块奖励部分
-		tx.initTransaction(hash, from, to, index, value, t)
+		tx.initTransaction(hash, from, to, index, value, t, contract, input, callSum)
 	}
 	return tx
 }
 
-func (tx *Transaction) initTransaction(hash *common.Hash, from, to *common.Address, index, value, t *big.Int) {
+func (tx *Transaction) initTransaction(hash *common.Hash, from, to *common.Address, index, value, t *big.Int, contract bool, input []byte, callSum int) {
 	tx.Hash = new(common.Hash)
 	tx.From = new(common.Address)
 	tx.To = new(common.Address)
@@ -51,6 +54,9 @@ func (tx *Transaction) initTransaction(hash *common.Hash, from, to *common.Addre
 	}
 	tx.Index = new(big.Int).Set(index)
 	tx.Value = new(big.Int).Set(value)
+	tx.Contract = contract
+	tx.Input = common.CopyBytes(input)
+	tx.CallSum = callSum
 	tx.ExecutionTime = time.Duration(t.Int64())
 	tx.Transfers = make([]Transfer, 0)
 }
@@ -95,7 +101,9 @@ func UnmarshalTransaction(txStr string) *Transaction {
 	tmp.SetString(infoStrs[7], 10)
 	t = new(big.Int).Set(tmp)
 
-	tx := newTransaction(number, hash, from, to, index, value, t)
+	callSum, _ := strconv.Atoi(infoStrs[10])
+
+	tx := newTransaction(number, hash, from, to, index, value, t, string2Bool(infoStrs[8]), common.Hex2Bytes(infoStrs[9]), callSum)
 	for _, transferStr := range transferStrs {
 		if transferStr[0] == '0' {
 			tx.Transfers = append(tx.Transfers, Transfer(unmarshalStateTransition(transferStr)))
@@ -180,7 +188,7 @@ func (tx Transaction) String() string {
 	}
 
 	if tx.Hash == nil {
-		return fmt.Sprintf("||||||%v|", trs[:len(trs)-1])
+		return fmt.Sprintf("||||||%v||||", trs[:len(trs)-1])
 	}
 
 	if tx.From != nil {
@@ -201,5 +209,13 @@ func (tx Transaction) String() string {
 	}
 	t := new(big.Int).SetInt64(int64(tx.ExecutionTime))
 	//fmt.Println(number.String(), tx.Hash.Hex(), from, to, index, value)
-	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v", tx.BlockNumber.String(), tx.Hash.Hex(), from, to, index, value, trs, t.String())
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v|%v|%v|%v", tx.BlockNumber.String(), tx.Hash.Hex(), from, to,
+		index, value, trs, t.String(), tx.Contract, common.Bytes2Hex(tx.Input), tx.CallSum)
+}
+
+func string2Bool(s string) bool {
+	if s == "1" {
+		return true
+	}
+	return false
 }
