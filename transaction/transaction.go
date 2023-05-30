@@ -105,6 +105,9 @@ func UnmarshalTransaction(txStr string) *Transaction {
 
 	tx := newTransaction(number, hash, from, to, index, value, t, string2Bool(infoStrs[8]), common.Hex2Bytes(infoStrs[9]), callSum)
 	for _, transferStr := range transferStrs {
+		if len(transferStr) == 0 {
+			continue
+		}
 		if transferStr[0] == '0' {
 			tx.Transfers = append(tx.Transfers, Transfer(unmarshalStateTransition(transferStr)))
 		} else {
