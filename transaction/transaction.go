@@ -19,6 +19,7 @@ type Transfer interface { // 转账
 type Transaction struct {
 	BlockNumber   *big.Int
 	Hash          *common.Hash
+	Gas           *big.Int
 	From          *common.Address
 	To            *common.Address
 	Index         *big.Int
@@ -213,7 +214,7 @@ func (tx Transaction) String() string {
 	t := new(big.Int).SetInt64(int64(tx.ExecutionTime))
 	//fmt.Println(number.String(), tx.Hash.Hex(), from, to, index, value)
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v|%v|%v|%v", tx.BlockNumber.String(), tx.Hash.Hex(), from, to,
-		index, value, trs, t.String(), tx.Contract, common.Bytes2Hex(tx.Input), tx.CallSum)
+		index, value, trs, t.String(), bool2String(tx.Contract), common.Bytes2Hex(tx.Input), tx.CallSum)
 }
 
 func string2Bool(s string) bool {
@@ -221,4 +222,11 @@ func string2Bool(s string) bool {
 		return true
 	}
 	return false
+}
+
+func bool2String(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
 }
