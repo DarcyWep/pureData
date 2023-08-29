@@ -11,8 +11,8 @@ import (
 const (
 	minCache     = 2048
 	minHandles   = 2048
-	nativeDbPath = "nativedb"
-	mergeDbPath  = "mergedb"
+	nativeDbPath = "/home/eth/Project/morph/ethereumdata/nativedb"
+	mergeDbPath  = "/home/eth/Project/morph/ethereumdata/mergedb"
 )
 
 func openLeveldb(path string) (*leveldb.DB, error) {
@@ -25,8 +25,8 @@ func openLeveldb(path string) (*leveldb.DB, error) {
 }
 
 func Test(t *testing.T) {
-	//db, err := openLeveldb(nativeDbPath) // get native transaction or merge transaction
-	db, err := openLeveldb(mergeDbPath) // get native transaction or merge transaction
+	db, err := openLeveldb(nativeDbPath) // get native transaction or merge transaction
+	//db, err := openLeveldb(mergeDbPath) // get native transaction or merge transaction
 	defer db.Close()
 	if err != nil {
 		fmt.Println("open leveldb error,", err)
@@ -34,7 +34,7 @@ func Test(t *testing.T) {
 	}
 	//number := new(big.Int).SetInt64(11090501)
 	//min, max, addSpan := big.NewInt(12000001), big.NewInt(12050000), big.NewInt(1)
-	min, max, addSpan := big.NewInt(12001599), big.NewInt(12001602), big.NewInt(1)
+	min, max, addSpan := big.NewInt(14000001), big.NewInt(14000050), big.NewInt(1)
 	for i := min; i.Cmp(max) == -1; i = i.Add(i, addSpan) {
 		txs, err := GetTransactionsByNumber(db, i)
 		if err != nil {
@@ -45,7 +45,7 @@ func Test(t *testing.T) {
 			//if len(tx.Transfers) == 1 {
 			//	fmt.Println(i.String(), tx.Hash, tx.Transfers)
 			//}
-			fmt.Println(i.String(), tx.Hash)
+			fmt.Println(i.String(), tx.Hash, tx.AccessAddress.String())
 		}
 	}
 

@@ -71,6 +71,7 @@ func (tx *Transaction) initTransaction(hash *common.Hash, from, to *common.Addre
 
 func UnmarshalTransaction(txStr string) *Transaction {
 	infoStrs := strings.Split(txStr, "|")
+	//fmt.Println(len(infoStrs))
 	var (
 		tmp = big.NewInt(0)
 
